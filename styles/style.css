@@ -1,0 +1,62 @@
+headerbar,
+* {
+    background-color: black;
+    background-image: none;
+    color: #cccccc;
+    border: 0px;
+}
+headerbar button {
+    border: 0px !important;
+}
+entry {
+    background-color: #000000;
+    color: #cccccc;
+    border-bottom: 1px solid green;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    border-radius: 0px;
+    outline: none;
+}
+textview {
+    background-color: #000000;
+    color: #cccccc;
+    border: 1px solid green;
+    border-radius: 0px;
+    outline: none;
+    padding: 15px;
+}
+entry selection,
+textview selection {
+    background-color: #3c78d0;
+    color: #ffffff;
+}
+button {
+    background-color: black;
+    border-radius: 5px;
+    border: 1px solid #333333;
+}
+button:hover {
+    border: 1px solid #666666;
+}
+scrollbar {
+    background-color: #000000;
+}
+.file-list {
+    font-size: 10px;
+    color: #888888;
+}
+.gen_deb {
+    background-color: rgba(255, 0, 0, 0.55);
+    padding-top: 15px;
+    padding-bottom: 15px;
+    border: none;
+}
+.gen_deb:hover {
+    background-color: rgba(255, 0, 0, 0.6);
+    border: none;
+}
+.gen_deb label {
+    background-color: transparent;
+    color: #cccccc;
+}
