@@ -17,6 +17,8 @@ class RightPanel(Gtk.Box):
 
         notebook = Gtk.Notebook()
         self.append(notebook)
+        notebook.set_vexpand(True)
+        notebook.set_hexpand(True)
 
         # 响应
         self.response_view = Gtk.TextView()

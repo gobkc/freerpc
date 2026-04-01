@@ -25,6 +25,7 @@ class MainWindow(Gtk.ApplicationWindow):
         # 主垂直布局
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(vbox)
+        vbox.get_style_context().add_class("main")
 
         # 上：Toolbar
         self.header = HeaderBar(self)
@@ -43,8 +44,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # 创建三个面板
         self.left_panel = LeftPanel(self)
+        self.left_panel.get_style_context().add_class("left_panel")
         self.center_panel = CenterPanel(self)
         self.right_panel = RightPanel(self)
+        self.right_panel.get_style_context().add_class("right_panel")
 
         # 包装滚动（重点）
         left_scroll = self.wrap_scroll(self.left_panel)

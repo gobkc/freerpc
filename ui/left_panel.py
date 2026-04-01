@@ -1,19 +1,15 @@
 import gi
 
 gi.require_version("Gtk", "4.0")
+from gi.repository import Gio, Gtk
 
-from gi.repository import Gtk
-
-from handlers.api_handler import ApiHandler
+from ui.json_tree import JsonTree
 
 
 class LeftPanel(Gtk.Box):
     def __init__(self, window):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-
         self.window = window
-        self.handler = ApiHandler(window)
-
         self.set_margin_top(6)
         self.set_margin_bottom(6)
         self.set_margin_start(6)
@@ -22,18 +18,36 @@ class LeftPanel(Gtk.Box):
         label = Gtk.Label(label="Proto & APIs")
         self.append(label)
 
-        # API 列表
-        self.listbox = Gtk.ListBox()
-        self.listbox.connect("row-activated", self.handler.on_api_selected)
+        # 使用 JsonTree 展示 API 树（只读，不显示图标或编辑）
+        self.tree = JsonTree(editable=False)
+        self.tree.set_vexpand(True)
+        self.tree.connect("node-activated", self._on_api_selected)
+        self.append(self.tree)
 
-        self.append(self.listbox)
+        # 示例数据：手动构建 API 树
+        self.load_demo_apis()
 
-        # 示例数据（后续由 proto 解析填充）
-        self.add_api("UserService/GetUser")
-        self.add_api("OrderService/CreateOrder")
+    def load_demo_apis(self):
+        """从 proto 解析或硬编码构建 API 树"""
+        data = {
+            "UserService": {
+                "GetUser": {"request": {"id": 1}, "description": "Get user by ID"},
+                "CreateUser": {
+                    "request": {"name": "Alice", "email": "alice@example.com"}
+                },
+            },
+            "OrderService": {
+                "CreateOrder": {"request": {"userId": 1, "items": ["item1"]}}
+            },
+        }
+        self.tree.set_data(data)
 
-    def add_api(self, name):
-        row = Gtk.ListBoxRow()
-        label = Gtk.Label(label=name, xalign=0)
-        row.set_child(label)
-        self.listbox.append(row)
+    def _on_api_selected(self, tree, node):
+        """当 API 节点被双击或 Enter 时触发"""
+        # 获取节点对应的 Python 值，例如 {"request": {...}}
+        api_info = node.get_python_value()
+        if isinstance(api_info, dict):
+            # 假设叶子节点是方法，其值包含 request 字段
+            request_template = api_info.get("request", {})
+            # 通知主窗口切换 API
+            self.window.center_panel.set_api(node.key, request_template)

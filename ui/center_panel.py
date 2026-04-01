@@ -31,8 +31,13 @@ class CenterPanel(Gtk.Box):
         meta_label = Gtk.Label(label="Metadata")
         self.append(meta_label)
 
-        self.meta_entry = Gtk.Entry()
-        self.append(self.meta_entry)
+        self.meta_textview = Gtk.TextView()
+        meta_box = Gtk.ScrolledWindow()
+        meta_box.get_style_context().add_class("meta-box")
+        meta_box.set_child(self.meta_textview)
+        self.meta_textview.set_vexpand(True)
+        self.meta_textview.set_hexpand(True)
+        self.append(meta_box)
 
         # 发送按钮
         send_btn = Gtk.Button(label="Send Request")

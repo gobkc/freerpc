@@ -14,7 +14,7 @@ class App(Gtk.Application):
         self.connect("activate", self.on_activate)
 
     def on_activate(self, app):
-        self.load_css()  # 👈 加在这里
+        self.load_css()
 
         win = MainWindow(application=app)
         win.present()
