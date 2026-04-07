@@ -9,16 +9,29 @@ headerbar * {
 scrolledwindow,
 paned,
 viewport {
-    padding: 0px !important;
-    margin: 0px !important;
-    border: none !important;
-    background-color: #000000;
-}
-trough {
+    padding: 0px;
+    margin: 0px;
     border: none;
+    background-color: #000000;
+    background-image: none;
+}
+trough,
+scrollbar {
+    border: 5px solid #000000;
+    outline: none;
     box-shadow: none;
-    background: transparent;
+    background-image: none;
+    background-color: #000000;
     padding: 0;
+}
+
+slider {
+    padding: 20;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    background-image: none;
+    background-color: #26282b;
 }
 viewport.view {
     padding: 0;
@@ -39,13 +52,16 @@ paned > separator {
 .parameter_paned > separator {
     background-color: #26282b;
 }
-
+.full-box {
+    border-bottom: 40px solid #26282b;
+}
 .left_panel,
 tabs,
 .left_panel * {
     background-color: #000000;
     background-image: none;
     color: #cccccc;
+    font-weight: bold;
     border: none;
     margin: 0px;
     padding: 0px;
@@ -57,6 +73,15 @@ tab {
 tab:hover {
     background-color: #111111;
     color: #cccccc;
+}
+.settings,
+.add_proto {
+    font-size: 22px;
+}
+.settings:hover,
+.settings:hover label,
+.add_proto:hover label {
+    color: white;
 }
 notebook {
     border: none;
@@ -73,9 +98,9 @@ notebook > header {
     padding: 15px;
 }
 entry {
-    background-color: #26282b;
+    background-color: #000000;
     color: #cccccc;
-    border-bottom: 1px solid #666666;
+    border-bottom: 8px solid #26282b;
     border-top: 0px;
     border-left: 0px;
     border-right: 0px;
@@ -95,9 +120,6 @@ textview {
 
 .right_panel textview {
     background-color: #000000;
-}
-
-.left_panel expander {
 }
 
 entry selection,
@@ -121,7 +143,7 @@ scrollbar {
     border-left: 0px;
     border-right: 0px;
     border-top: 0px;
-    border-bottom: 2px solid springgreen;
+    border-bottom: 8px solid #26282b;
     border-radius: 0px;
     color: springgreen;
 }
@@ -131,7 +153,7 @@ scrollbar {
     border-left: 0px;
     border-right: 0px;
     border-top: 0px;
-    border-bottom: 2px solid green;
+    border-bottom: 8px solid #26282b;
     color: green;
 }
 

@@ -24,6 +24,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # 主垂直布局
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vbox.add_css_class("full-box")
         vbox.set_hexpand(True)
         vbox.set_vexpand(True)
         self.set_child(vbox)
