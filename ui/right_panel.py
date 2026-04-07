@@ -10,10 +10,10 @@ class RightPanel(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 
         self.window = window
-        self.set_margin_top(6)
-        self.set_margin_bottom(6)
-        self.set_margin_start(6)
-        self.set_margin_end(6)
+        self.set_margin_top(0)
+        self.set_margin_bottom(0)
+        self.set_margin_start(0)
+        self.set_margin_end(0)
 
         notebook = Gtk.Notebook()
         self.append(notebook)

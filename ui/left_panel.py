@@ -10,12 +10,13 @@ class LeftPanel(Gtk.Box):
     def __init__(self, window):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.window = window
-        self.set_margin_top(6)
-        self.set_margin_bottom(6)
-        self.set_margin_start(6)
-        self.set_margin_end(6)
+        self.set_margin_top(0)
+        self.set_margin_bottom(0)
+        self.set_margin_start(0)
+        self.set_margin_end(0)
 
         label = Gtk.Label(label="Proto & APIs")
+        label.set_xalign(0)
         self.append(label)
 
         # 使用 JsonTree 展示 API 树（只读，不显示图标或编辑）

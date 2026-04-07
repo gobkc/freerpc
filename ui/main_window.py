@@ -24,12 +24,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # 主垂直布局
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vbox.set_hexpand(True)
+        vbox.set_vexpand(True)
         self.set_child(vbox)
         vbox.get_style_context().add_class("main")
-
-        # 上：Toolbar
-        self.header = HeaderBar(self)
-        vbox.append(self.header)
 
         # =========================
         # ✅ 下半部分：Paned结构

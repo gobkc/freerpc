@@ -128,7 +128,7 @@ class TreeItemBox(Gtk.Box):
         self.append(self.expander)
 
         self.icon = Gtk.Label()
-        self.icon.set_width_chars(2)
+        self.icon.set_width_chars(0)  # 2
         self.append(self.icon)
 
         self.label = Gtk.Label(xalign=0)
@@ -225,14 +225,25 @@ class JsonTree(Gtk.ScrolledWindow):
         box = listitem._box
 
         box.expander.set_list_row(row)
+        has_children = item.node_type in ("object", "array")
+        if has_children:
+            if row.get_expanded():
+                box.icon.set_text("−")  # 展开
+            else:
+                box.icon.set_text("+")  # 收起
+        else:
+            box.icon.set_text("")
 
         # icon
         if item.node_type == "object":
-            box.icon.set_text("📁")
+            box.icon.set_text("")
+            # box.icon.set_text("📁")
         elif item.node_type == "array":
-            box.icon.set_text("📦")
+            box.icon.set_text("")
+            # box.icon.set_text("＋")
         else:
-            box.icon.set_text("•")
+            box.icon.set_text("")
+            # box.icon.set_text("•")
 
         # label
         text = item.key
