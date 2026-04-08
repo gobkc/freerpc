@@ -16,6 +16,8 @@ class MainWindow(Gtk.ApplicationWindow):
         headerbar = Gtk.HeaderBar()
         headerbar.set_show_title_buttons(True)
         headerbar.set_title_widget(Gtk.Label(label="freerpc——gRPC UI Client"))
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-application-prefer-dark-theme", True)
         self.set_titlebar(headerbar)
         self.set_default_size(1200, 800)
 

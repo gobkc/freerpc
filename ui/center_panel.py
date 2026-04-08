@@ -29,9 +29,19 @@ class CenterPanel(Gtk.Box):
 
         self.append(top_bar)
 
-        # 标题
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self.api_label = self.create_section_label(" Select an API")
-        self.append(self.api_label)
+        header_box.append(self.api_label)
+        format_btn = Gtk.Button(label="{/}")
+        format_btn.add_css_class("icon_btn")
+        format_btn.set_tooltip_text("format JSON")
+        header_box.append(format_btn)
+        clear_btn = Gtk.Button(label="×")
+        clear_btn.add_css_class("icon_btn")
+        clear_btn.set_tooltip_text("clear contents")
+        header_box.append(clear_btn)
+
+        self.append(header_box)
 
         # ===== Paned 开始 =====
         paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
@@ -50,6 +60,8 @@ class CenterPanel(Gtk.Box):
         self.textview = EditableJsonTree(sample_data)
         self.textview.set_theme("dark")
         self.textview.add_css_class("editable_json_tree_dark")
+        self.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        format_btn.connect("clicked", lambda btn: self.textview._manual_render())
 
         json_scrolled = Gtk.ScrolledWindow()
         json_scrolled.set_overlay_scrolling(False)
@@ -61,8 +73,20 @@ class CenterPanel(Gtk.Box):
         # ---------------- Meta 区 ----------------
         meta_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         meta_label = self.create_section_label(" Metadata")
-        meta_container.append(meta_label)
+        header_box.append(meta_label)
+        format_btn = Gtk.Button(label="{/}")
+        format_btn.add_css_class("icon_btn")
+        format_btn.set_tooltip_text("format JSON")
+
+        header_box.append(format_btn)
+        clear_btn = Gtk.Button(label="×")
+        clear_btn.add_css_class("icon_btn")
+        clear_btn.set_tooltip_text("clear contents")
+        header_box.append(clear_btn)
+        header_box.add_css_class("meta_box")
+        meta_container.append(header_box)
 
         meta_data = {
             "library": "GTK4",
@@ -73,6 +97,8 @@ class CenterPanel(Gtk.Box):
         self.meta_textview = EditableJsonTree(meta_data)
         self.meta_textview.set_theme("dark")
         self.meta_textview.add_css_class("editable_json_tree_dark")
+        self.meta_textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        format_btn.connect("clicked", lambda btn: self.meta_textview._manual_render())
 
         meta_scrolled = Gtk.ScrolledWindow()
         meta_scrolled.set_overlay_scrolling(False)

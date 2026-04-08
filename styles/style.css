@@ -17,7 +17,7 @@ viewport {
 }
 trough,
 scrollbar {
-    border: 5px solid #000000;
+    border: 0px solid #000000;
     outline: none;
     box-shadow: none;
     background-image: none;
@@ -26,7 +26,8 @@ scrollbar {
 }
 
 slider {
-    padding: 20;
+    padding-right: 0px;
+    margin-right: 5px;
     border: none;
     outline: none;
     box-shadow: none;
@@ -53,7 +54,7 @@ paned > separator {
     background-color: #26282b;
 }
 .full-box {
-    border-bottom: 40px solid #26282b;
+    border-bottom: 1px solid #26282b;
 }
 .left_panel,
 tabs,
@@ -83,6 +84,7 @@ tab:hover {
 .add_proto:hover label {
     color: white;
 }
+
 notebook {
     border: none;
 }
@@ -160,20 +162,21 @@ scrollbar {
 .important_btn label {
     background-color: transparent;
 }
-.meta-box {
-    max-height: 300px;
-}
 
 .icon_btn {
-    background-color: rgb(24, 26, 27);
-    background-image: none;
-    color: #cccccc;
-    border: 0px solid rgba(255, 255, 255, 0.3);
-    border-radius: 5px;
-    text-align: center;
-}
-.icon_btn:hover {
     background-color: rgb(8, 10, 13);
+    background-image: none;
+    color: #bbbbbb;
+    border: 0px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0px;
+    text-align: center;
+    outline: none;
+    padding-left: 0px;
+    padding-right: 5px;
+}
+
+.icon_btn:hover {
+    color: white;
 }
 
 .editable_json_tree_dark {
@@ -181,4 +184,48 @@ scrollbar {
     background-image: none;
     background: black;
     color: white;
+}
+
+.meta_box {
+    background-image: none;
+    background: black;
+}
+
+.settings_window,
+.settings_window listview {
+    background-image: none;
+    background: black;
+    border: 1px solid #26282b;
+    border-radius: 0px;
+}
+
+.settings_window button {
+    background-image: none;
+    background: #26282b;
+    border: 0px solid black;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-radius: 0px;
+    color: #cccccc;
+}
+.settings_window entry {
+    background-image: none;
+    background: #26282b;
+    border: 0px;
+}
+
+.settings_window treeview {
+    background-image: none;
+    background: black;
+    border: 0px;
+}
+
+.settings_window treeview button {
+    margin: 0px;
+}
+
+.settings_window button:hover {
+    background-image: none;
+    color: white;
+    background: #36383b;
 }
