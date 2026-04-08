@@ -169,7 +169,6 @@ scrollbar {
     color: #bbbbbb;
     border: 0px solid rgba(255, 255, 255, 0.3);
     border-radius: 0px;
-    text-align: center;
     outline: none;
     padding-left: 0px;
     padding-right: 5px;
@@ -214,18 +213,20 @@ scrollbar {
     border: 0px;
 }
 
-.settings_window treeview {
-    background-image: none;
-    background: black;
-    border: 0px;
-}
-
-.settings_window treeview button {
+treeview button {
     margin: 0px;
 }
 
-.settings_window button:hover {
+treeview button:hover {
     background-image: none;
     color: white;
     background: #36383b;
+}
+
+window,
+dropdown,
+dropdown * {
+    background-image: none;
+    border: 0px;
+    border-radius: 0px;
 }

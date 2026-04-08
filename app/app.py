@@ -6,10 +6,13 @@ gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, Gio, Gtk
 
 from ui.main_window import MainWindow
+from utils.config_manager import ConfigManager
 
 
 class App(Gtk.Application):
     def __init__(self):
+        self.config_manager = ConfigManager()
+        self.config = self.config_manager.get()
         super().__init__(application_id="com.py.grpcui")
         self.connect("activate", self.on_activate)
 
