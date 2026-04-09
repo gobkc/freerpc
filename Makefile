@@ -1,6 +1,6 @@
 build:
 	rm -rf *.pyz
-	python3 -m zipapp . -o freerpc.pyz -m "main:main"
+	python3 -m zipapp . -o freerpc.pyz -m "main:main" -p "/usr/bin/env python3"
 	python3 freerpc.pyz
 install:
 	sudo apt update
