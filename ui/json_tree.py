@@ -174,8 +174,8 @@ class JsonTree(Gtk.ScrolledWindow):
         root = build_tree(data)
 
         store = Gio.ListStore()
-        store.append(root)
-
+        for child in root.children:
+            store.append(child)
         self.model = Gtk.TreeListModel.new(
             store,
             False,

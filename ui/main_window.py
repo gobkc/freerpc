@@ -11,7 +11,8 @@ from ui.right_panel import RightPanel
 
 
 class MainWindow(Gtk.ApplicationWindow):
-    def __init__(self, application):
+    def __init__(self, application, context):
+        self.context = context
         super().__init__(application=application)
         headerbar = Gtk.HeaderBar()
         headerbar.set_show_title_buttons(True)

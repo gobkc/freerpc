@@ -4,18 +4,30 @@ from typing import TypedDict, cast
 
 
 class Tab(TypedDict):
+    host: str
     request: dict
     metadata: dict
     response: dict
     log: dict
 
 
+class Rpc(TypedDict):
+    type: str
+    func: str
+    request: str
+    response: str
+    request_schema: dict
+    response_schema: dict
+
+
 class Service(TypedDict):
     name: str
     tabs: list[Tab]
+    rpc: list[Rpc]
 
 
 class Proto(TypedDict):
+    path: str
     package: str
     services: list[Service]
 
@@ -43,16 +55,28 @@ class ConfigManager:
             "host": "",
             "protos": [
                 {
+                    "path": "",
                     "package": "",
                     "services": [
                         {
                             "name": "",
                             "tabs": [
                                 {
+                                    "host": "",
                                     "request": {},
                                     "metadata": {},
                                     "response": {},
                                     "log": {},
+                                }
+                            ],
+                            "rpc": [
+                                {
+                                    "type": "",
+                                    "func": "",
+                                    "request": "",
+                                    "response": "",
+                                    "request_schema": {},
+                                    "response_schema": {},
                                 }
                             ],
                         }
@@ -73,6 +97,10 @@ class ConfigManager:
     def save(self):
         with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+    def set_config(self, config: Config):
+        self.config = config
+        self.save()
 
     def get(self) -> Config:
         return self.config
