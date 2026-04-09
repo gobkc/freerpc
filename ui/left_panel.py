@@ -37,8 +37,9 @@ class LeftPanel(Gtk.Box):
         # =========================
         # Tree
         # =========================
-        self.tree = JsonTree(editable=False)
+        self.tree = JsonTree(editable=False, depth=2)
         self.tree.set_vexpand(True)
+        self.tree.set_hexpand(False)
         self.tree.connect("node-activated", self.handler.on_api_selected)
 
         self.append(self.tree)

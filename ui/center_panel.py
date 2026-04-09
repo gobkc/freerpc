@@ -4,6 +4,7 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
 
+from handlers.center_panel_handler import CenterPanelHandler
 from ui.editable_json_tree import EditableJsonTree
 
 
@@ -12,8 +13,9 @@ class CenterPanel(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
         self.window = window
+        self.context = window.context
+        self.handler = CenterPanelHandler(self)
 
-        # ===== 顶部：URL + Send 按钮 =====
         top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
 
         self.url_entry = Gtk.Entry()
@@ -22,7 +24,7 @@ class CenterPanel(Gtk.Box):
 
         send_btn = Gtk.Button(label="Send Request")
         send_btn.get_style_context().add_class("important_btn")
-        send_btn.connect("clicked", self.on_send_clicked)
+        send_btn.connect("clicked", self.handler.on_send_click)
 
         top_bar.append(self.url_entry)
         top_bar.append(send_btn)
@@ -30,38 +32,38 @@ class CenterPanel(Gtk.Box):
         self.append(top_bar)
 
         header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.rpc_type_label = self.create_section_label("[Unknown]")
+        self.rpc_type_label.set_name("rpc-type-label")
+        self.rpc_type_label.set_hexpand(False)
+        header_box.append(self.rpc_type_label)
         self.api_label = self.create_section_label(" Select an API")
+        self.api_label.set_margin_start(0)
         header_box.append(self.api_label)
+
         format_btn = Gtk.Button(label="{/}")
-        format_btn.add_css_class("icon_btn")
+        format_btn.get_style_context().add_class("icon_btn")
         format_btn.set_tooltip_text("format JSON")
+        format_btn.connect("clicked", self.handler.on_format_json_click)
+
         header_box.append(format_btn)
+
         clear_btn = Gtk.Button(label="×")
-        clear_btn.add_css_class("icon_btn")
+        clear_btn.get_style_context().add_class("icon_btn")
         clear_btn.set_tooltip_text("clear contents")
+        clear_btn.connect("clicked", self.handler.on_clear_json_click)
+
         header_box.append(clear_btn)
 
         self.append(header_box)
 
-        # ===== Paned 开始 =====
         paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
         paned.get_style_context().add_class("parameter_paned")
         paned.set_vexpand(True)
 
-        # ---------------- JSON 输入 ----------------
-        sample_data = {
-            "name": "example",
-            "version": 1.0,
-            "test": False,
-            "active": True,
-            "tags": ["gtk", "json", "tree"],
-            "metadata": {"author": "user", "count": 42, "nullable": None},
-        }
-        self.textview = EditableJsonTree(sample_data)
+        self.textview = EditableJsonTree({})
         self.textview.set_theme("dark")
         self.textview.add_css_class("editable_json_tree_dark")
         self.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
-        format_btn.connect("clicked", lambda btn: self.textview._manual_render())
 
         json_scrolled = Gtk.ScrolledWindow()
         json_scrolled.set_overlay_scrolling(False)
@@ -70,35 +72,33 @@ class CenterPanel(Gtk.Box):
 
         paned.set_start_child(json_scrolled)
 
-        # ---------------- Meta 区 ----------------
         meta_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
-        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        meta_header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         meta_label = self.create_section_label(" Metadata")
-        header_box.append(meta_label)
-        format_btn = Gtk.Button(label="{/}")
-        format_btn.add_css_class("icon_btn")
-        format_btn.set_tooltip_text("format JSON")
+        meta_header_box.append(meta_label)
 
-        header_box.append(format_btn)
-        clear_btn = Gtk.Button(label="×")
-        clear_btn.add_css_class("icon_btn")
-        clear_btn.set_tooltip_text("clear contents")
-        header_box.append(clear_btn)
-        header_box.add_css_class("meta_box")
-        meta_container.append(header_box)
+        meta_format_btn = Gtk.Button(label="{/}")
+        meta_format_btn.get_style_context().add_class("icon_btn")
+        meta_format_btn.set_tooltip_text("format JSON")
+        meta_format_btn.connect("clicked", self.handler.on_format_meta_click)
 
-        meta_data = {
-            "library": "GTK4",
-            "language": "Python",
-            "features": ["collapsible", "editable", "searchable"],
-            "nested": {"level2": {"level3": "deep value"}},
-        }
-        self.meta_textview = EditableJsonTree(meta_data)
+        meta_header_box.append(meta_format_btn)
+
+        meta_clear_btn = Gtk.Button(label="×")
+        meta_clear_btn.get_style_context().add_class("icon_btn")
+        meta_clear_btn.set_tooltip_text("clear contents")
+        meta_clear_btn.connect("clicked", self.handler.on_clear_meta_click)
+
+        meta_header_box.append(meta_clear_btn)
+        meta_header_box.add_css_class("meta_box")
+
+        meta_container.append(meta_header_box)
+
+        self.meta_textview = EditableJsonTree({})
         self.meta_textview.set_theme("dark")
         self.meta_textview.add_css_class("editable_json_tree_dark")
         self.meta_textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
-        format_btn.connect("clicked", lambda btn: self.meta_textview._manual_render())
 
         meta_scrolled = Gtk.ScrolledWindow()
         meta_scrolled.set_overlay_scrolling(False)
@@ -110,7 +110,8 @@ class CenterPanel(Gtk.Box):
         paned.set_end_child(meta_container)
 
         self.append(paned)
-        # ===== Paned 结束 =====
+
+        self.handler.on_init()
 
     def set_api(self, api_name):
         self.api_label.set_text(f"API: {api_name}")
@@ -124,13 +125,8 @@ class CenterPanel(Gtk.Box):
         buffer = self.textview.get_buffer()
         buffer.set_text(text)
 
-    def on_send_clicked(self, button):
-        url = self.url_entry.get_text()
-        print(f"Send gRPC request to: {url}")
-
     def create_section_label(self, text):
         label = Gtk.Label(label=text)
-
         label.set_xalign(0)
         label.set_yalign(0.5)
         label.set_hexpand(True)

@@ -24,6 +24,8 @@ handlers:
   __init__.py:
   toolbar_handler.py: toolbar事件
   api_handler.py: API点击事件
+  left_panel_handler.py: 左panel的所有事件
+  center_panel_handler.py: 中panel的所有事件
 
 services:
   __init__.py:

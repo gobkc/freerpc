@@ -1,4 +1,5 @@
 import json
+from ast import Return
 
 import gi
 
@@ -102,9 +103,12 @@ class LeftPanelHandler:
     def on_left_tree_init(self):
         config = self.panel.context.config
         tree_data = {}
+        host = config.get("host", "")
         protos = config.get("protos", [])
         for proto in protos:
             services = proto.get("services", [])
+            file_path = proto.get("path", "")
+            package = proto.get("package", "")
             for service in services:
                 service_name = service.get("name", "UnknownService")
                 if service_name not in tree_data:
@@ -112,8 +116,17 @@ class LeftPanelHandler:
                 rpcs = service.get("rpc", [])
                 for rpc in rpcs:
                     func_name = rpc.get("func", "UnknownFunc")
+                    rpc_type = rpc.get("type", "unary")
                     request_schema = rpc.get("request_schema", {})
-                    tree_data[service_name][func_name] = {"request": request_schema}
+                    tree_data[service_name][func_name] = {
+                        "request": request_schema,
+                        "type": rpc_type,
+                        "service_name": service_name,
+                        "func_name": func_name,
+                        "file_path": file_path,
+                        "host": host,
+                        "package": package,
+                    }
         if not tree_data:
             tree_data = {}
         self.panel.tree.set_data(tree_data)
@@ -225,9 +238,59 @@ class LeftPanelHandler:
     # API click
     # =========================
     def on_api_selected(self, tree, node):
-        panel = self.panel
+        if node.node_type == "object":
+            data = node.get_python_value()  # 返回类似 {"request": {...}}
+            request_schema = data.get("request")
+            json_schema = generate_default_value(request_schema)
+            self.panel.window.center_panel.api_label.set_text(data["func_name"])
+            self.panel.window.center_panel.textview.set_data(json_schema)
+            self.panel.window.center_panel.url_entry.set_text(data["host"])
+            self.panel.window.center_panel.rpc_type_label.set_text(
+                "[" + data["type"].upper() + "]"
+            )
+            self.panel.window.center_panel.meta_textview.set_data({})
+            self.context.current_rpc = data
+            self.context.request_schema = json_schema
+            print("Request data:", data, "\njson schema", self.context.request_schema)
 
-        api_info = node.get_python_value()
-        if isinstance(api_info, dict):
-            request_template = api_info.get("request", {})
-            panel.window.center_panel.set_api(node.key, request_template)
+        # panel = self.panel
+
+        # api_info = node.get_python_value()
+        # if isinstance(api_info, dict):
+        #     request_template = api_info.get("request", {})
+        #     panel.window.center_panel.set_api(node.key, request_template)
+
+
+def generate_default_value(schema):
+    """
+    根据 JSON Schema 生成对应的默认值（零值）。
+    schema: dict，包含 'type' 字段及可能的 'properties'、'items' 等。
+    返回对应的 Python 对象（dict/list/基本类型）。
+    """
+    if schema is None:
+        return
+    schema_type = schema.get("type", "string")
+
+    if schema_type == "object":
+        result = {}
+        properties = schema.get("properties", {})
+        for prop_name, prop_schema in properties.items():
+            result[prop_name] = generate_default_value(prop_schema)
+        return result
+
+    elif schema_type == "array":
+        # 生成两个示例元素
+        items_schema = schema.get("items", {"type": "string"})
+        # 如果 items 是单个 schema，生成两个相同结构的元素
+        return [generate_default_value(items_schema) for _ in range(2)]
+
+    elif schema_type == "integer":
+        return 0
+    elif schema_type == "number":
+        return 0.0
+    elif schema_type == "boolean":
+        return False
+    elif schema_type == "null":
+        return None
+    else:  # string 及其他
+        return ""

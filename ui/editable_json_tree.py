@@ -93,6 +93,14 @@ class EditableJsonTree(Gtk.TextView):
         drag.set_actions(Gdk.DragAction(0))
         self.add_controller(drag)
 
+    def set_data(self, data):
+        cursor_offset = self._get_cursor_offset()
+        self.node_map.clear()
+        self.icon_ranges.clear()
+        self.root = self._build(data or {})
+        self._render()
+        self._restore_cursor(min(cursor_offset, self.buffer.get_char_count()))
+
     # --------------------------
     # 主题
     # --------------------------
@@ -287,3 +295,24 @@ class EditableJsonTree(Gtk.TextView):
         self.root = self._build(data)
         self._render()
         self.buffer.place_cursor(self.buffer.get_start_iter())
+
+    def get_data(self):
+        """
+        获取当前 TextView 中的 JSON 数据（不包含折叠按钮图标）
+        返回解析后的 Python 对象（dict 或 list）
+        如果 JSON 无效则返回 None
+        """
+        # 获取缓冲区全部文本
+        buf = self.buffer
+        start = buf.get_start_iter()
+        end = buf.get_end_iter()
+        text = buf.get_text(start, end, False)
+
+        # 移除折叠图标（[-] 和 [+] 以及可能存在的空格）
+        cleaned = re.sub(r"\[-\]\s*|\[\+\]\s*", "", text)
+
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError:
+            return None
+        return data
