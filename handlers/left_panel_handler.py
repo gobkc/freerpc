@@ -243,14 +243,24 @@ class LeftPanelHandler:
             request_schema = data.get("request")
             json_schema = generate_default_value(request_schema)
             self.panel.window.center_panel.api_label.set_text(data["func_name"])
-            self.panel.window.center_panel.textview.set_data(json_schema)
             self.panel.window.center_panel.url_entry.set_text(data["host"])
             self.panel.window.center_panel.rpc_type_label.set_text(
                 "[" + data["type"].upper() + "]"
             )
-            # self.panel.window.center_panel.meta_textview.textview.set_data({})
             self.context.current_rpc = data
             self.context.request_schema = json_schema
+            parameter_buffer = (
+                self.panel.window.center_panel.parameter.textview.get_buffer()
+            )
+            parameter_buffer.set_text(
+                json.dumps(json_schema, indent=2, ensure_ascii=False)
+            )
+
+            metadata_buffer = (
+                self.panel.window.center_panel.meta_textview.textview.get_buffer()
+            )
+            metadata_buffer.set_text(json.dumps({}, indent=2, ensure_ascii=False))
+
             print("Request data:", data, "\njson schema", self.context.request_schema)
 
         # panel = self.panel

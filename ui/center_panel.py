@@ -62,14 +62,13 @@ class CenterPanel(Gtk.Box):
         paned.get_style_context().add_class("parameter_paned")
         paned.set_vexpand(True)
 
-        self.textview = EditableJsonTree({})
-        self.textview.set_theme("dark")
-        self.textview.add_css_class("editable_json_tree_dark")
-        self.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.parameter = JsonGutterRenderer(theme="dark", show_line_numbers=False)
+        self.parameter.get_style_context().add_class("json_gutter")
+        self.parameter.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
 
         json_scrolled = Gtk.ScrolledWindow()
         json_scrolled.set_overlay_scrolling(False)
-        json_scrolled.set_child(self.textview)
+        json_scrolled.set_child(self.parameter)
         json_scrolled.set_vexpand(True)
 
         paned.set_start_child(json_scrolled)
@@ -118,12 +117,12 @@ class CenterPanel(Gtk.Box):
         self.api_label.set_text(f"API: {api_name}")
 
     def get_json_text(self):
-        buffer = self.textview.get_buffer()
+        buffer = self.parameter.textview.get_buffer()
         start, end = buffer.get_bounds()
         return buffer.get_text(start, end, True)
 
     def set_json_text(self, text):
-        buffer = self.textview.get_buffer()
+        buffer = self.parameter.textview.get_buffer()
         buffer.set_text(text)
 
     def create_section_label(self, text):

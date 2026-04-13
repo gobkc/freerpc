@@ -27,6 +27,7 @@ class RightPanel(Gtk.Box):
         self.response_view.get_style_context().add_class("json_gutter")
         self.response_view.textview.set_editable(False)
         self.response_view.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.response_view.textview.set_cursor_visible(False)
 
         scrolled1 = Gtk.ScrolledWindow()
         scrolled1.set_child(self.response_view)
@@ -38,6 +39,7 @@ class RightPanel(Gtk.Box):
         self.response_view.get_style_context().add_class("json_gutter")
         self.log_view.textview.set_editable(False)
         self.log_view.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.log_view.textview.set_cursor_visible(False)
 
         scrolled2 = Gtk.ScrolledWindow()
         scrolled2.set_child(self.log_view)

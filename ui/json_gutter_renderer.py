@@ -28,7 +28,7 @@ class JsonGutterRenderer(Gtk.Box):
                 "gutter_bg": "#000000",
                 "line_num": "#666666",
                 "fold_btn": "#64b5f6",
-                "string": "#f48fb1",
+                "string": "#ce93d8",
                 "number": "#a5d6a7",
                 "placeholder": "white",
             },
@@ -214,6 +214,11 @@ class JsonGutterRenderer(Gtk.Box):
 
     def set_text(self, text: str):
         self.buffer.set_text(text)
+
+    def get_dict(self):
+        start_iter, end_iter = self.buffer.get_bounds()
+        text = self.buffer.get_text(start_iter, end_iter, False)
+        return json.loads(text)
 
     def _parse_json_regions(self, text: str):
         old_states = {r["start"]: r.get("collapsed", False) for r in self.fold_regions}

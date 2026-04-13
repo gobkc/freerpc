@@ -1,4 +1,5 @@
 import importlib
+import json
 import os
 import shutil
 import sys
@@ -11,7 +12,6 @@ from grpc_tools import protoc
 
 
 def _find_protobuf_include() -> Optional[str]:
-    """查找 protobuf 标准 include 目录（包含 google/protobuf/any.proto）"""
     candidates = [
         "/usr/include",
         "/usr/local/include",
@@ -41,11 +41,8 @@ def dynamic_grpc_call(
     host: str,
     request_dict: Dict[str, Any],
     request_stream: Optional[Iterable[Dict[str, Any]]] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
-    """
-    动态 gRPC 调用，支持四种 RPC 类型。
-    """
-    # 标准化 rpc_type
     rpc_type = rpc_type.strip().lower()
     if rpc_type == "unary":
         mode = "unary"
@@ -68,7 +65,6 @@ def dynamic_grpc_call(
     module_base = os.path.splitext(proto_filename)[0]
     temp_dir = tempfile.mkdtemp()
 
-    # 编译 proto 文件
     protoc_args = [
         "grpc_tools.protoc",
         f"--proto_path={proto_dir}",
@@ -89,7 +85,6 @@ def dynamic_grpc_call(
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise RuntimeError(f"Failed to compile {proto_path}")
 
-    # 导入生成的模块
     sys.path.insert(0, temp_dir)
     try:
         pb2_module = importlib.import_module(f"{module_base}_pb2")
@@ -103,21 +98,17 @@ def dynamic_grpc_call(
             sys.path.remove(temp_dir)
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-    # 智能查找 Stub 类
     def find_stub_class(module, service_name: str):
-        # 直接尝试拼接
         stub_name = f"{service_name}Stub"
         stub_class = getattr(module, stub_name, None)
         if stub_class:
             return stub_class
-        # 首字母大写
         if service_name:
             capitalized = service_name[0].upper() + service_name[1:]
             stub_name = f"{capitalized}Stub"
             stub_class = getattr(module, stub_name, None)
             if stub_class:
                 return stub_class
-        # 处理包名
         if "." in service_name:
             simple = service_name.split(".")[-1]
             if simple:
@@ -126,7 +117,6 @@ def dynamic_grpc_call(
                 stub_class = getattr(module, stub_name, None)
                 if stub_class:
                     return stub_class
-        # 列出所有 Stub
         all_stubs = [attr for attr in dir(module) if attr.endswith("Stub")]
         if len(all_stubs) == 1:
             return getattr(module, all_stubs[0])
@@ -141,27 +131,18 @@ def dynamic_grpc_call(
 
     stub_class = find_stub_class(pb2_grpc_module, service_name)
 
-    # 智能查找请求/响应消息类（支持多种后缀）
     def find_message_class(suffix_hint: str) -> type:
-        """
-        suffix_hint: 'Request' 或 'Response'
-        实际查找时会尝试多种常见后缀，并根据方法名模糊匹配。
-        """
-        # 定义常见后缀
         request_suffixes = ["Request", "Req", "RequestMsg"]
         response_suffixes = ["Response", "Reply", "Resp", "ResponseMsg"]
         suffixes = request_suffixes if suffix_hint == "Request" else response_suffixes
 
-        # 收集所有匹配的消息类
         candidates = []
         for attr in dir(pb2_module):
             cls = getattr(pb2_module, attr)
             if not isinstance(cls, type):
                 continue
-            # 类名必须包含方法名（不区分大小写）
             if method_name.lower() not in attr.lower():
                 continue
-            # 检查是否以任一允许的后缀结尾
             for suf in suffixes:
                 if attr.endswith(suf):
                     candidates.append((attr, cls))
@@ -170,17 +151,14 @@ def dynamic_grpc_call(
         if len(candidates) == 1:
             return candidates[0][1]
         elif len(candidates) > 1:
-            # 尝试优先选择完全匹配后缀的（例如 VersionReply 匹配 Reply）
             for attr, cls in candidates:
                 if attr.endswith(suffix_hint):
                     return cls
-            # 否则报错
             raise RuntimeError(
                 f"Multiple possible {suffix_hint} classes for method {method_name}: "
                 f"{[c[0] for c in candidates]}. Please ensure unique naming."
             )
         else:
-            # 完全没找到：列出所有消息类以便调试
             all_msg_classes = [
                 attr
                 for attr in dir(pb2_module)
@@ -203,6 +181,12 @@ def dynamic_grpc_call(
     def msg_to_dict(m):
         return MessageToDict(m, preserving_proto_field_name=True)
 
+    grpc_metadata = []
+    if metadata:
+        for k, v in metadata.items():
+            val = v if isinstance(v, (str, bytes)) else json.dumps(v)
+            grpc_metadata.append((k, val))
+
     channel = grpc.insecure_channel(host, options=[("grpc.http_proxy", "")])
     stub = stub_class(channel)
     method = getattr(stub, method_name)
@@ -210,7 +194,7 @@ def dynamic_grpc_call(
     if mode == "unary":
         try:
             req = dict_to_msg(request_dict)
-            resp = method(req)
+            resp = method(req, metadata=grpc_metadata)
             return msg_to_dict(resp)
         finally:
             cleanup()
@@ -219,7 +203,7 @@ def dynamic_grpc_call(
 
         def server_gen():
             try:
-                for resp in method(req):
+                for resp in method(req, metadata=grpc_metadata):
                     yield msg_to_dict(resp)
             finally:
                 cleanup()
@@ -235,7 +219,7 @@ def dynamic_grpc_call(
                 yield dict_to_msg(request_dict)
 
         try:
-            resp = method(req_gen())
+            resp = method(req_gen(), metadata=grpc_metadata)
             return msg_to_dict(resp)
         finally:
             cleanup()
@@ -250,7 +234,7 @@ def dynamic_grpc_call(
 
         def bidir_gen():
             try:
-                for resp in method(req_gen()):
+                for resp in method(req_gen(), metadata=grpc_metadata):
                     yield msg_to_dict(resp)
             finally:
                 cleanup()
