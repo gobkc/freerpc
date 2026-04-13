@@ -29,7 +29,7 @@ class CenterPanelHandler:
                 request_dict=parameter,
             )
             response_view_buffer = (
-                self.panel.window.right_panel.response_view.get_buffer()
+                self.panel.window.right_panel.response_view.textview.get_buffer()
             )
             response_view_buffer.set_text(
                 json.dumps(response, indent=2, ensure_ascii=False)
@@ -40,7 +40,7 @@ class CenterPanelHandler:
             details = e.details()
             error_msg = f"faled to call gRPC API\n{status_code}\n{details}"
             response_view_buffer = (
-                self.panel.window.right_panel.response_view.get_buffer()
+                self.panel.window.right_panel.response_view.textview.get_buffer()
             )
             response_view_buffer.set_text(error_msg)
 
@@ -48,7 +48,7 @@ class CenterPanelHandler:
             # 捕获其他意外错误（可选）
             error_msg = f"发生未知错误: {str(e)}"
             response_view_buffer = (
-                self.panel.window.right_panel.response_view.get_buffer()
+                self.panel.window.right_panel.response_view.textview.get_buffer()
             )
             response_view_buffer.set_text(error_msg)
 
@@ -59,8 +59,8 @@ class CenterPanelHandler:
         self.panel.set_json_text("")
 
     def on_format_meta_click(self, button):
-        self.panel.meta_textview._manual_render()
+        self.panel.meta_textview.format_all_json_content()
 
     def on_clear_meta_click(self, button):
-        buffer = self.panel.meta_textview.get_buffer()
-        buffer.set_text("")
+        buffer = self.panel.meta_textview.textview.get_buffer()
+        buffer.set_text("{}")

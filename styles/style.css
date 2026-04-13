@@ -245,3 +245,14 @@ dropdown * {
     background: #7267a3;
     padding: 3px 6px 3px 6px;
 }
+
+.json_gutter textview {
+    margin: 0px;
+    padding: 0px;
+    background-image: none;
+    background: black;
+}
+
+.json_gutter {
+    padding: 15px;
+}

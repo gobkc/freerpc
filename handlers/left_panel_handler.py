@@ -248,7 +248,7 @@ class LeftPanelHandler:
             self.panel.window.center_panel.rpc_type_label.set_text(
                 "[" + data["type"].upper() + "]"
             )
-            self.panel.window.center_panel.meta_textview.set_data({})
+            # self.panel.window.center_panel.meta_textview.textview.set_data({})
             self.context.current_rpc = data
             self.context.request_schema = json_schema
             print("Request data:", data, "\njson schema", self.context.request_schema)

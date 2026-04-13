@@ -1,5 +1,7 @@
 import gi
 
+from ui.json_gutter_renderer import JsonGutterRenderer
+
 gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
@@ -95,10 +97,9 @@ class CenterPanel(Gtk.Box):
 
         meta_container.append(meta_header_box)
 
-        self.meta_textview = EditableJsonTree({})
-        self.meta_textview.set_theme("dark")
-        self.meta_textview.add_css_class("editable_json_tree_dark")
-        self.meta_textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.meta_textview = JsonGutterRenderer(theme="dark", show_line_numbers=False)
+        self.meta_textview.get_style_context().add_class("json_gutter")
+        self.meta_textview.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
 
         meta_scrolled = Gtk.ScrolledWindow()
         meta_scrolled.set_overlay_scrolling(False)

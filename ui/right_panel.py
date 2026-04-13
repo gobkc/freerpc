@@ -4,6 +4,8 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
 
+from ui.json_gutter_renderer import JsonGutterRenderer
+
 
 class RightPanel(Gtk.Box):
     def __init__(self, window):
@@ -21,8 +23,10 @@ class RightPanel(Gtk.Box):
         notebook.set_hexpand(True)
 
         # 响应
-        self.response_view = Gtk.TextView()
-        self.response_view.set_editable(False)
+        self.response_view = JsonGutterRenderer(theme="dark", show_line_numbers=False)
+        self.response_view.get_style_context().add_class("json_gutter")
+        self.response_view.textview.set_editable(False)
+        self.response_view.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
 
         scrolled1 = Gtk.ScrolledWindow()
         scrolled1.set_child(self.response_view)
@@ -30,8 +34,10 @@ class RightPanel(Gtk.Box):
         notebook.append_page(scrolled1, Gtk.Label(label="Response"))
 
         # 过程日志
-        self.log_view = Gtk.TextView()
-        self.log_view.set_editable(False)
+        self.log_view = JsonGutterRenderer(theme="dark", show_line_numbers=False)
+        self.response_view.get_style_context().add_class("json_gutter")
+        self.log_view.textview.set_editable(False)
+        self.log_view.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
 
         scrolled2 = Gtk.ScrolledWindow()
         scrolled2.set_child(self.log_view)
