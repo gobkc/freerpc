@@ -106,7 +106,9 @@ class CenterPanelHandler:
 
     def on_clear_json_click(self, button):
         buffer = self.panel.parameter.textview.get_buffer()
-        buffer.set_text("{}")
+        buffer.set_text(
+            json.dumps(self.context.request_schema, indent=2, ensure_ascii=False)
+        )
 
     def on_format_meta_click(self, button):
         self.panel.meta_textview.format_all_json_content()

@@ -1,5 +1,3 @@
-import json
-
 from utils.json_utils import format_json
 
 

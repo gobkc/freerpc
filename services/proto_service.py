@@ -50,14 +50,6 @@ class ProtoService:
             services.append(
                 {
                     "name": service_name,
-                    "tabs": [
-                        {
-                            "request": {},
-                            "metadata": {},
-                            "response": {},
-                            "log": {},
-                        }
-                    ],
                     "rpc": rpcs,
                 }
             )

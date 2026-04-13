@@ -3,26 +3,21 @@ from pathlib import Path
 from typing import TypedDict, cast
 
 
-class Tab(TypedDict):
-    host: str
-    request: dict
-    metadata: dict
-    response: dict
-    log: dict
-
-
 class Rpc(TypedDict):
+    host: str
     type: str
     func: str
     request: str
     response: str
     request_schema: dict
     response_schema: dict
+    parameters: str
+    metadata: str
+    log: dict
 
 
 class Service(TypedDict):
     name: str
-    tabs: list[Tab]
     rpc: list[Rpc]
 
 
@@ -60,23 +55,18 @@ class ConfigManager:
                     "services": [
                         {
                             "name": "",
-                            "tabs": [
-                                {
-                                    "host": "",
-                                    "request": {},
-                                    "metadata": {},
-                                    "response": {},
-                                    "log": {},
-                                }
-                            ],
                             "rpc": [
                                 {
+                                    "host": "",
                                     "type": "",
                                     "func": "",
                                     "request": "",
                                     "response": "",
                                     "request_schema": {},
                                     "response_schema": {},
+                                    "metadata": "",
+                                    "parameters": "",
+                                    "log": {},
                                 }
                             ],
                         }

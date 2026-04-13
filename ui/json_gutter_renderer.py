@@ -17,20 +17,30 @@ class JsonGutterRenderer(Gtk.Box):
 
         self.themes = {
             "light": {
-                "gutter_bg": "#f5f5f5",
+                "gutter_bg": "#ffffff",
                 "line_num": "#999999",
-                "fold_btn": "black",
+                "fold_btn": "#1976d2",
+                "placeholder": "#616161",
+                "key": "#9c27b0",
                 "string": "#e91e63",
                 "number": "#2e7d32",
-                "placeholder": "#2e7d32",
+                "boolean": "#f57c00",
+                "null": "#757575",
+                "bracket": "#1e88e5",
+                "comma": "#616161",
             },
             "dark": {
                 "gutter_bg": "#000000",
                 "line_num": "#666666",
                 "fold_btn": "#64b5f6",
-                "string": "#ce93d8",
-                "number": "#a5d6a7",
-                "placeholder": "white",
+                "placeholder": "#4fc3f7",
+                "key": "#ce93d8",
+                "string": "#f48fb1",
+                "number": "#81c784",
+                "boolean": "#ffb74d",
+                "null": "#bdbdbd",
+                "bracket": "#4fc3f7",
+                "comma": "#9e9e9e",
             },
         }
 
@@ -349,28 +359,90 @@ class JsonGutterRenderer(Gtk.Box):
                 tag.set_property("weight", weight)
             table.add(tag)
 
+        add("key", self.config["key"])
         add("string", self.config["string"])
         add("number", self.config["number"])
+        add("boolean", self.config["boolean"])
+        add("null", self.config["null"])
+        add("bracket", self.config["bracket"])
+        add("comma", self.config["comma"])
         add("hidden", invisible=True)
         add("placeholder", color=self.config["placeholder"], weight=400)
 
     def _highlight(self):
         start, end = self.buffer.get_bounds()
-        self.buffer.remove_tag_by_name("string", start, end)
-        self.buffer.remove_tag_by_name("number", start, end)
+        for t in ["key", "string", "number", "boolean", "null", "bracket", "comma"]:
+            self.buffer.remove_tag_by_name(t, start, end)
+
         text = self.buffer.get_text(start, end, False)
-        for m in re.finditer(r'"[^"]*"', text):
-            self.buffer.apply_tag_by_name(
-                "string",
-                self.buffer.get_iter_at_offset(m.start()),
-                self.buffer.get_iter_at_offset(m.end()),
-            )
-        for m in re.finditer(r"\b\d+\b", text):
-            self.buffer.apply_tag_by_name(
-                "number",
-                self.buffer.get_iter_at_offset(m.start()),
-                self.buffer.get_iter_at_offset(m.end()),
-            )
+
+        blocks = []
+        i = 0
+        while i < len(text):
+            if text[i] in "{[":
+                stack = []
+                found_end = -1
+                for j in range(i, len(text)):
+                    char = text[j]
+                    if char in "{[":
+                        stack.append(char)
+                    elif char in "}]":
+                        if not stack:
+                            break
+                        opening = stack.pop()
+                        if (opening == "{" and char == "}") or (
+                            opening == "[" and char == "]"
+                        ):
+                            if not stack:
+                                found_end = j + 1
+                                break
+                        else:
+                            break
+
+                if found_end != -1:
+                    snippet = text[i:found_end]
+                    try:
+                        json.loads(snippet)
+                        blocks.append((i, found_end))
+                        i = found_end
+                        continue
+                    except:
+                        pass
+            i += 1
+
+        for b_start, b_end in blocks:
+            snippet = text[b_start:b_end]
+
+            def apply_regex(pattern, tag_name, group=0):
+                for m in re.finditer(pattern, snippet):
+                    m_start = b_start + m.start(group)
+                    m_end = b_start + m.end(group)
+                    i_start = self.buffer.get_iter_at_offset(m_start)
+                    i_end = self.buffer.get_iter_at_offset(m_end)
+                    self.buffer.apply_tag_by_name(tag_name, i_start, i_end)
+
+            apply_regex(r"[{}[\]]", "bracket")
+            apply_regex(r"[:,]", "comma")
+            apply_regex(r"-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b", "number")
+            apply_regex(r"\b(?:true|false)\b", "boolean")
+            apply_regex(r"\bnull\b", "null")
+
+            for m in re.finditer(r'"(?:\\.|[^"\\])*"', snippet):
+                m_start = b_start + m.start()
+                m_end = b_start + m.end()
+                i_start = self.buffer.get_iter_at_offset(m_start)
+                i_end = self.buffer.get_iter_at_offset(m_end)
+                for t in ["number", "boolean", "null", "bracket", "comma"]:
+                    self.buffer.remove_tag_by_name(t, i_start, i_end)
+                self.buffer.apply_tag_by_name("string", i_start, i_end)
+
+            for m in re.finditer(r'("(?:\\.|[^"\\])*")\s*:', snippet):
+                m_start = b_start + m.start(1)
+                m_end = b_start + m.end(1)
+                i_start = self.buffer.get_iter_at_offset(m_start)
+                i_end = self.buffer.get_iter_at_offset(m_end)
+                self.buffer.remove_tag_by_name("string", i_start, i_end)
+                self.buffer.apply_tag_by_name("key", i_start, i_end)
 
     def _hex_to_rgb(self, hex_color):
         hex_color = hex_color.lstrip("#")

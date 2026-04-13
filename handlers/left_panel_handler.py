@@ -263,13 +263,6 @@ class LeftPanelHandler:
 
             print("Request data:", data, "\njson schema", self.context.request_schema)
 
-        # panel = self.panel
-
-        # api_info = node.get_python_value()
-        # if isinstance(api_info, dict):
-        #     request_template = api_info.get("request", {})
-        #     panel.window.center_panel.set_api(node.key, request_template)
-
 
 def generate_default_value(schema):
     """
