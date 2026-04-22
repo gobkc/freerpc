@@ -13,7 +13,8 @@ class Rpc(TypedDict):
     response_schema: dict
     parameters: str
     metadata: str
-    log: dict
+    result: str
+    log: str
 
 
 class Service(TypedDict):
@@ -91,6 +92,36 @@ class ConfigManager:
     def set_config(self, config: Config):
         self.config = config
         self.save()
+
+    def update_rpc_fields(
+        self,
+        package: str,
+        service_name: str,
+        func_name: str,
+        updates: dict,
+    ) -> Config:
+        found = False
+        for proto in self.config.get("protos", []):
+            if proto.get("package") != package:
+                continue
+            for service in proto.get("services", []):
+                if service.get("name") != service_name:
+                    continue
+                for rpc in service.get("rpc", []):
+                    if rpc.get("func") == func_name:
+                        for k, v in updates.items():
+                            if k in rpc:
+                                rpc[k] = v
+                            else:
+                                rpc[k] = v
+                        found = True
+                        break
+        if not found:
+            raise ValueError(
+                f"RPC not found: package={package}, service={service_name}, func={func_name}"
+            )
+        self.save()
+        return self.config
 
     def get(self) -> Config:
         return self.config

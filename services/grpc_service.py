@@ -1,10 +1,13 @@
+import datetime
+import gzip
 import importlib
 import json
 import os
 import shutil
 import sys
 import tempfile
-from typing import Any, Dict, Generator, Iterable, Optional, Union
+import time
+from typing import Any, Callable, Dict, Generator, Iterable, Optional, Union
 
 import grpc
 from google.protobuf.json_format import MessageToDict, ParseDict
@@ -42,7 +45,11 @@ def dynamic_grpc_call(
     request_dict: Dict[str, Any],
     request_stream: Optional[Iterable[Dict[str, Any]]] = None,
     metadata: Optional[Dict[str, Any]] = None,
+    details_callback: Optional[
+        Callable[[str], None]
+    ] = None,  # 新增：用于接收详情的回调函数
 ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+
     rpc_type = rpc_type.strip().lower()
     if rpc_type == "unary":
         mode = "unary"
@@ -99,6 +106,7 @@ def dynamic_grpc_call(
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     def find_stub_class(module, service_name: str):
+        # (保持原有逻辑不变...)
         stub_name = f"{service_name}Stub"
         stub_class = getattr(module, stub_name, None)
         if stub_class:
@@ -132,6 +140,7 @@ def dynamic_grpc_call(
     stub_class = find_stub_class(pb2_grpc_module, service_name)
 
     def find_message_class(suffix_hint: str) -> type:
+        # (保持原有逻辑不变...)
         request_suffixes = ["Request", "Req", "RequestMsg"]
         response_suffixes = ["Response", "Reply", "Resp", "ResponseMsg"]
         suffixes = request_suffixes if suffix_hint == "Request" else response_suffixes
@@ -191,55 +200,215 @@ def dynamic_grpc_call(
     stub = stub_class(channel)
     method = getattr(stub, method_name)
 
+    # ================= 新增：详情字符串生成器 =================
+    def _trigger_details(
+        start_t,
+        end_t,
+        start_dt,
+        end_dt,
+        req_msg,
+        resp_msg,
+        req_dict_data,
+        resp_dict_data,
+    ):
+        if not details_callback:
+            return
+
+        duration_ms = (end_t - start_t) * 1000
+
+        req_bytes = req_msg.SerializeToString() if req_msg else b""
+        req_hex = req_bytes.hex()
+        req_comp = gzip.compress(req_bytes).hex() if req_bytes else ""
+
+        resp_bytes = resp_msg.SerializeToString() if resp_msg else b""
+        resp_hex = resp_bytes.hex()
+
+        details = f"""[Request Info]
+Time Start: {start_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]}
+Time End:   {end_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]}
+Duration:   {duration_ms:.3f} ms
+
+[Request Data]
+Original Dict:
+{json.dumps(req_dict_data, indent=2, ensure_ascii=False) if req_dict_data else "{}"}
+
+Protobuf Message:
+{str(req_msg).strip() if req_msg else "<Empty>"}
+
+Serialized Bytes (hex):
+{req_hex or "<Empty>"}
+
+Simulated Compressed (gzip, hex):
+{req_comp or "<Empty>"}
+
+[Response Data]
+Raw Bytes (hex):
+{resp_hex or "<Empty>"}
+
+Parsed Dict:
+{json.dumps(resp_dict_data, indent=2, ensure_ascii=False) if resp_dict_data else "{}"}
+
+[Transport]
+Target: {host}
+Protocol: gRPC over HTTP/2
+Encoding: protobuf
+Compression: none (simulated gzip shown above)
+Metadata:
+{grpc_metadata}
+
+[RPC Info]
+Service: {service_name}
+Method: {method_name}
+Type: {mode}"""
+
+        details_callback(details)
+
+    # ========================================================
+
     if mode == "unary":
         try:
             req = dict_to_msg(request_dict)
+            start_dt = datetime.datetime.now()
+            start_t = time.perf_counter()
+
             resp = method(req, metadata=grpc_metadata)
-            return msg_to_dict(resp)
+
+            end_t = time.perf_counter()
+            end_dt = datetime.datetime.now()
+            parsed_resp = msg_to_dict(resp)
+
+            _trigger_details(
+                start_t, end_t, start_dt, end_dt, req, resp, request_dict, parsed_resp
+            )
+            return parsed_resp
         finally:
             cleanup()
+
     elif mode == "server_streaming":
         req = dict_to_msg(request_dict)
 
         def server_gen():
+            start_dt = datetime.datetime.now()
+            start_t = time.perf_counter()
+            first_resp = None
+            first_resp_dict = None
+
             try:
                 for resp in method(req, metadata=grpc_metadata):
-                    yield msg_to_dict(resp)
+                    parsed = msg_to_dict(resp)
+                    if first_resp is None:
+                        first_resp = resp
+                        first_resp_dict = parsed
+                    yield parsed
             finally:
+                end_t = time.perf_counter()
+                end_dt = datetime.datetime.now()
+                _trigger_details(
+                    start_t,
+                    end_t,
+                    start_dt,
+                    end_dt,
+                    req,
+                    first_resp,
+                    request_dict,
+                    first_resp_dict,
+                )
                 cleanup()
 
         return server_gen()
+
     elif mode == "client_streaming":
+        first_req = None
+        first_req_dict = None
 
         def req_gen():
+            nonlocal first_req, first_req_dict
             if request_stream is not None:
                 for d in request_stream:
-                    yield dict_to_msg(d)
+                    msg = dict_to_msg(d)
+                    if first_req is None:
+                        first_req = msg
+                        first_req_dict = d
+                    yield msg
             else:
-                yield dict_to_msg(request_dict)
+                msg = dict_to_msg(request_dict)
+                first_req = msg
+                first_req_dict = request_dict
+                yield msg
 
         try:
+            start_dt = datetime.datetime.now()
+            start_t = time.perf_counter()
+
             resp = method(req_gen(), metadata=grpc_metadata)
-            return msg_to_dict(resp)
+
+            end_t = time.perf_counter()
+            end_dt = datetime.datetime.now()
+            parsed_resp = msg_to_dict(resp)
+
+            _trigger_details(
+                start_t,
+                end_t,
+                start_dt,
+                end_dt,
+                first_req,
+                resp,
+                first_req_dict,
+                parsed_resp,
+            )
+            return parsed_resp
         finally:
             cleanup()
+
     elif mode == "bidirectional":
+        first_req = None
+        first_req_dict = None
 
         def req_gen():
+            nonlocal first_req, first_req_dict
             if request_stream is not None:
                 for d in request_stream:
-                    yield dict_to_msg(d)
+                    msg = dict_to_msg(d)
+                    if first_req is None:
+                        first_req = msg
+                        first_req_dict = d
+                    yield msg
             else:
-                yield dict_to_msg(request_dict)
+                msg = dict_to_msg(request_dict)
+                first_req = msg
+                first_req_dict = request_dict
+                yield msg
 
         def bidir_gen():
+            start_dt = datetime.datetime.now()
+            start_t = time.perf_counter()
+            first_resp = None
+            first_resp_dict = None
+
             try:
                 for resp in method(req_gen(), metadata=grpc_metadata):
-                    yield msg_to_dict(resp)
+                    parsed = msg_to_dict(resp)
+                    if first_resp is None:
+                        first_resp = resp
+                        first_resp_dict = parsed
+                    yield parsed
             finally:
+                end_t = time.perf_counter()
+                end_dt = datetime.datetime.now()
+                _trigger_details(
+                    start_t,
+                    end_t,
+                    start_dt,
+                    end_dt,
+                    first_req,
+                    first_resp,
+                    first_req_dict,
+                    first_resp_dict,
+                )
                 cleanup()
 
         return bidir_gen()
+
     else:
         cleanup()
         raise RuntimeError(f"Unhandled mode: {mode}")

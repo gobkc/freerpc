@@ -3,6 +3,8 @@ from ast import Return
 
 import gi
 
+from utils.dict import find_rpc_by_request
+
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
 
@@ -52,7 +54,7 @@ class LeftPanelHandler:
 
         panel.host_entry = Gtk.Entry()
         panel.host_entry.set_hexpand(True)
-        panel.host_entry.set_placeholder_text("https://host_addr")
+        panel.host_entry.set_placeholder_text("host_addr:9301")
         panel.host_entry.set_text(self.context.config.get("host", ""))
 
         host_box.append(host_label)
@@ -239,29 +241,75 @@ class LeftPanelHandler:
     # =========================
     def on_api_selected(self, tree, node):
         if node.node_type == "object":
-            data = node.get_python_value()  # 返回类似 {"request": {...}}
+            data = node.get_python_value()
             request_schema = data.get("request")
             json_schema = generate_default_value(request_schema)
             self.panel.window.center_panel.api_label.set_text(data["func_name"])
-            self.panel.window.center_panel.url_entry.set_text(data["host"])
             self.panel.window.center_panel.rpc_type_label.set_text(
                 "[" + data["type"].upper() + "]"
             )
             self.context.current_rpc = data
             self.context.request_schema = json_schema
+
+            rpc = find_rpc_by_request(
+                self.context.config,
+                data["package"],
+                data["service_name"],
+                data["func_name"],
+            )
+
+            host = rpc.get("host") or data.get("host", "")
+            self.panel.window.center_panel.url_entry.set_text(host)
+
+            parameter = (
+                json.dumps(json_schema, indent=2, ensure_ascii=False)
+                if rpc.get("parameters") in ["{}", "", None]
+                else rpc["parameters"]
+            )
+
             parameter_buffer = (
                 self.panel.window.center_panel.parameter.textview.get_buffer()
             )
-            parameter_buffer.set_text(
-                json.dumps(json_schema, indent=2, ensure_ascii=False)
-            )
+            parameter_buffer.set_text(parameter)
 
             metadata_buffer = (
                 self.panel.window.center_panel.meta_textview.textview.get_buffer()
             )
-            metadata_buffer.set_text(json.dumps({}, indent=2, ensure_ascii=False))
+            metadata = (
+                json.dumps({}, indent=2, ensure_ascii=False)
+                if rpc.get("metadata") in ["", "{}", None]
+                else rpc["metadata"]
+            )
+            metadata_buffer.set_text(metadata)
 
-            print("Request data:", data, "\njson schema", self.context.request_schema)
+            # 更新 Response (当前可见页)
+            result = rpc.get("result") or ""
+            result_buffer = (
+                self.panel.window.right_panel.response_view.textview.get_buffer()
+            )
+            result_buffer.set_text(result)
+
+            # 【关键修改】：只更新 context 里的缓存，不更新隐藏的 log_view buffer
+            self.context.log_buffer = rpc.get("log") or ""
+
+            # 检查当前选中的是不是 Log 页，如果是，则顺便更新
+            notebook = self.panel.window.right_panel.notebook
+            current_page = notebook.get_nth_page(notebook.get_current_page())
+            label = notebook.get_tab_label(current_page).get_text()
+
+            if label == "Execution Log":
+                log_buffer = (
+                    self.panel.window.right_panel.log_view.textview.get_buffer()
+                )
+                log_buffer.set_text(self.context.log_buffer)
+            else:
+                # 如果当前不在 Log 页，为了安全，清空 buffer，防止下次切换瞬间爆炸
+                log_buffer = (
+                    self.panel.window.right_panel.log_view.textview.get_buffer()
+                )
+                log_buffer.set_text("")
+
+            self.context.data = data
 
 
 def generate_default_value(schema):

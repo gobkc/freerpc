@@ -46,6 +46,10 @@ class JsonGutterRenderer(Gtk.Box):
 
         self.config = self.themes.get(theme, self.themes["light"])
 
+        self._debounce_id = None
+        self._debounce_delay = 500  # ms
+        self._on_debounced_change_cb = None  # callback
+
         self.textview = Gtk.TextView()
         self.textview.set_monospace(True)
         self.textview.set_wrap_mode(Gtk.WrapMode.NONE)
@@ -74,6 +78,7 @@ class JsonGutterRenderer(Gtk.Box):
         self.textview.add_controller(key_ctrl)
 
         self.buffer.connect("changed", self._on_buffer_changed)
+        self.buffer.connect("changed", self._on_buffer_changed_debounced)
 
     def _on_key_pressed(self, controller, keyval, keycode, state):
         mask = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK
@@ -221,6 +226,33 @@ class JsonGutterRenderer(Gtk.Box):
         self._highlight()
         self._apply_fold()
         GLib.idle_add(self.gutter.queue_draw)
+
+    def _on_buffer_changed_debounced(self, buffer):
+        if self._is_rendering:
+            return
+
+        if self._debounce_id:
+            GLib.source_remove(self._debounce_id)
+
+        self._debounce_id = GLib.timeout_add(
+            self._debounce_delay, self._emit_debounced_change
+        )
+
+    def _emit_debounced_change(self):
+        self._debounce_id = None
+        if not self._on_debounced_change_cb:
+            return False
+        start, end = self.buffer.get_bounds()
+        text = self.buffer.get_text(start, end, False)
+        try:
+            self._on_debounced_change_cb(text)
+        except Exception:
+            pass
+        return False
+
+    def connect_debounced_changed(self, callback, delay=500):
+        self._on_debounced_change_cb = callback
+        self._debounce_delay = delay
 
     def set_text(self, text: str):
         self.buffer.set_text(text)

@@ -1,5 +1,6 @@
 import gi
 
+from ui.debounced_entry import DebouncedEntry
 from ui.json_gutter_renderer import JsonGutterRenderer
 
 gi.require_version("Gtk", "4.0")
@@ -20,9 +21,10 @@ class CenterPanel(Gtk.Box):
 
         top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
 
-        self.url_entry = Gtk.Entry()
+        self.url_entry = DebouncedEntry(delay=600)
         self.url_entry.set_placeholder_text("https://host_addr")
         self.url_entry.set_hexpand(True)
+        self.url_entry.connect_debounced_changed(self.handler.on_host_change)
 
         send_btn = Gtk.Button(label="Send Request")
         send_btn.get_style_context().add_class("important_btn")
@@ -65,6 +67,9 @@ class CenterPanel(Gtk.Box):
         self.parameter = JsonGutterRenderer(theme="dark", show_line_numbers=False)
         self.parameter.get_style_context().add_class("json_gutter")
         self.parameter.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.parameter.connect_debounced_changed(
+            self.handler.on_parameter_change, delay=800
+        )
 
         json_scrolled = Gtk.ScrolledWindow()
         json_scrolled.set_overlay_scrolling(False)
@@ -99,6 +104,9 @@ class CenterPanel(Gtk.Box):
         self.meta_textview = JsonGutterRenderer(theme="dark", show_line_numbers=False)
         self.meta_textview.get_style_context().add_class("json_gutter")
         self.meta_textview.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.meta_textview.connect_debounced_changed(
+            self.handler.on_metadata_change, delay=800
+        )
 
         meta_scrolled = Gtk.ScrolledWindow()
         meta_scrolled.set_overlay_scrolling(False)

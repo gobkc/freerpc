@@ -1,7 +1,6 @@
-import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 
 class ProtoService:
@@ -78,6 +77,7 @@ class ProtoService:
 
             rpcs.append(
                 {
+                    "host": "",
                     "type": rpc_type,
                     "func": func,
                     "request": req_type,
@@ -88,6 +88,10 @@ class ProtoService:
                         "type": "object",
                         "additionalProperties": {"type": "string"},
                     },
+                    "parameters": "{}",
+                    "metadata": "{}",
+                    "result": "",
+                    "log": "",
                 }
             )
         return rpcs
