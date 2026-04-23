@@ -1,42 +1,118 @@
-freerpc目录结构
+# FreeRPC
 
-````yaml
-main.py: 入口
+![FreeRPC Logo](logo.svg)
+
+A lightweight **gRPC client GUI tool** built with **Python 3 + GTK4 (PyGObject)**.
+FreeRPC is inspired by BloomRPC and focuses on simplicity, clarity, and extensibility.
+
+---
+
+## ✨ Overview
+
+FreeRPC provides a clean and intuitive interface for exploring gRPC services, composing requests, and inspecting responses.
+It is designed for developers who want a fast, minimal, and customizable alternative to heavier API tools.
+
+---
+
+## 📸 Screenshots
+
+### Request & Response Panels
+
+![Screenshot 1](screenshot1.png)
+
+### Execution Log Panel
+
+![Screenshot 2](screenshot2.png)
+
+---
+
+## 🚀 Features
+
+* 🧩 Proto-based API navigation (left panel)
+* ✍️ Editable JSON request & metadata
+* 📡 gRPC request execution with detailed logging
+* 📊 Structured response visualization
+* 🎨 GTK4-based UI with custom CSS styling
+* 🪶 Lightweight and fast startup
+* 🔧 Easily extensible architecture
+
+---
+
+## 🏗️ Project Structure
+
+```yaml
+main.py: Entry point
 
 app:
   __init__.py:
-  app.py: 应用初始化
+  app.py: Application initialization
 
 context:
-  app_context.py: 上下文(目前只携带配置信息)
+  app_context.py: Global context (currently holds configuration)
 
 ui:
   __init__.py:
-  main_window.py: 主窗口
-  header_bar.py: 顶部 toolbar
-  left_panel.py: 左侧（proto + API）
-  center_panel.py: 中间（请求）
-  right_panel.py: 右侧（结果）
-  json_tree.py: 左侧菜单组件
-  editable_json_tree.py: 请求参数和metadata参数编辑控件
+  main_window.py: Main window
+  header_bar.py: Top toolbar
+  left_panel.py: Left panel (Proto + APIs)
+  center_panel.py: Center panel (Request editor)
+  right_panel.py: Right panel (Response viewer)
+  json_tree.py: JSON tree view (navigation)
+  editable_json_tree.py: Editable JSON component (request & metadata)
 
 handlers:
   __init__.py:
-  toolbar_handler.py: toolbar事件
-  api_handler.py: API点击事件
-  left_panel_handler.py: 左panel的所有事件
-  center_panel_handler.py: 中panel的所有事件
+  toolbar_handler.py: Toolbar events
+  api_handler.py: API click handling
+  left_panel_handler.py: Left panel interactions
+  center_panel_handler.py: Center panel interactions
 
 services:
   __init__.py:
-  grpc_service.py: gRPC调用（预留）
-  proto_service.py: proto解析（预留）
+  grpc_service.py: gRPC invocation layer
+  proto_service.py: Proto parsing layer
 
 styles:
-  style.css: GTK样式
+  style.css: GTK styling
 
 utils:
   __init__.py:
-  json_utils.py: JSON格式化
-  config_manager.py: 配置管理器
-````
+  json_utils.py: JSON formatting utilities
+  config_manager.py: Configuration manager
+```
+
+---
+
+## 🧠 Design Philosophy
+
+FreeRPC emphasizes:
+
+* **Clarity over complexity** – a clean UI with minimal distractions
+* **Separation of concerns** – clear division between UI, handlers, and services
+* **Extensibility** – easy to plug in new features (e.g., dynamic gRPC calls, proto parsing)
+* **Developer-first experience** – built by developers, for developers
+
+---
+
+## ⚙️ Tech Stack
+
+* **Python 3**
+* **GTK4 (PyGObject)**
+* **gRPC / Protobuf**
+* Custom CSS styling for UI refinement
+
+---
+
+## 📌 Notes
+
+* The project is actively evolving, especially around dynamic gRPC invocation and debugging capabilities.
+
+---
+
+## 📄 License
+
+MIT License (or customize as needed)
+
+---
+
+If you’re looking for a simple, hackable gRPC GUI client with a native desktop feel, FreeRPC aims to be exactly that.

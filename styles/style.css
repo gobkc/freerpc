@@ -73,6 +73,10 @@ tabs {
     background-color: #000000;
     background-image: none;
 }
+.settings {
+    padding: 0px;
+    margin: 0px;
+}
 .left_panel row {
     padding-top: 4px;
     padding-bottom: 4px;

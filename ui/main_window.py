@@ -52,7 +52,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.right_panel.get_style_context().add_class("right_panel")
 
         # 包装滚动（重点）
-        left_scroll = self.wrap_scroll(self.left_panel)
+        left_scroll = self.wrap_scroll(self.left_panel, hpolicy=Gtk.PolicyType.NEVER)
         center_scroll = self.wrap_scroll(self.center_panel)
         right_scroll = self.wrap_scroll(self.right_panel)
 
@@ -67,11 +67,11 @@ class MainWindow(Gtk.ApplicationWindow):
         paned_main.set_position(250)
         paned_right.set_position(600)
 
-    def wrap_scroll(self, widget):
+    def wrap_scroll(self, widget, hpolicy=Gtk.PolicyType.AUTOMATIC):
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_child(widget)
 
         scrolled.set_vexpand(True)
         scrolled.set_hexpand(True)
-
+        scrolled.set_policy(hpolicy, Gtk.PolicyType.AUTOMATIC)
         return scrolled

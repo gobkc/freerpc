@@ -3,7 +3,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gio", "2.0")
 
-from gi.repository import Gdk, Gio, GObject, Gtk
+from gi.repository import Gdk, Gio, GObject, Gtk, Pango
 
 
 # =========================
@@ -138,6 +138,8 @@ class TreeItemBox(Gtk.Box):
 
         self.label = Gtk.Label(xalign=0)
         self.label.set_hexpand(True)
+        self.label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.label.set_wrap(False)
         self.append(self.label)
 
 
@@ -158,7 +160,6 @@ class JsonTree(Gtk.ScrolledWindow):
         """
         super().__init__()
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.set_propagate_natural_width(True)
         self.editable = editable
         self.max_depth = depth  # None 或正整数
 
