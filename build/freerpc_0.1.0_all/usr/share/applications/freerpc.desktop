@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=FreeRPC
+Comment=Dynamic gRPC client
+Exec=freerpc
+Icon=freerpc
+Categories=Development;
+Terminal=false

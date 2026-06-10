@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /usr/share/freerpc
+exec python3 main.py "$@"
